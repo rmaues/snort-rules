@@ -1,0 +1,36 @@
+# Arquivo de regras criadas para serem usadas no snort de forma independete das
+# refras ja presentes na ferramenta
+#
+# algumas caracteristicas da criacao das regras devem ser observadas, e seguem
+# abaixo um modelo de uma regra e como eh a estrutura de uma regra do Snort.
+#
+# REGRA : modelo
+#
+# <tipo de alerta> <protocolo> <rede origem> <porta origem> -> <rede/endereco destino> <porta destino> (msg:"MENSAGEM"; opcoes; content:"expn root";)
+#............................................................................
+#
+
+# Regras Criadas
+
+# Regra para a deteccao de conexoes de SKYPE na rede
+
+# Esta primeira regra detecta a busca de conexao de clientes Skype por rotas
+# para enderecos externo na porta 33033
+alert tcp any any -> any 33033 (flags: PA; sid:1010001; priority:9; msg:"Detectado tentativa de conexao SKYPE"; rev:1)
+
+# Segunda regra que monitora a canexao de DNS para busca por dominio Skype
+# ui.skype.com
+
+alert udp any any -> any 53 (msg:"Consulta ao subdominio Skype."; priority:9; content:"|05|skype"; depth:50; sid:1010002; rev:1;)
+
+# Regra de teste para verificacao do Snort
+alert udp any any -> $HOME_NET 6000 (msg:"Trafego direto na porta 6000!";sid:1010003;rev:1)
+
+# Alertas de conteudo especifico
+
+alert tcp $HOME_NET any -> $EXTERNAL_NET 80 (msg:"Material improprio encontrado"; content:"sexy"; content:"porn"; content:"pornografia"; content:"pedofilia"; nocase; priority:10; sid:1010004; rev:1)
+
+alert tcp $HOME_NET any -> $HOME_NET 8080 (msg:"Material improprio encontrado"; content:"sexy"; content:"porn"; content:"pornografia"; content:"pedofilia"; nocase; priority:10; sid:1010004; rev:1)
+
+#
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"[ALERT] TROJAN W32/Drive3 Checkin"; flow:established,to_server; content:"POST"; http_method; content:"99="; fast_pattern; depth:3; http_client_body; pcre:"/^99=1\x26ver=\d{5}\x26req=\d{9,10}$/P"; reference:url,www.arbornetworks.com/asert/2014/03/drive-returns-with-new-tactics-and-new-attacks; reference:md5,237c98f2b31a3353b1d81bd3bdb2c8ed; classtype:trojan-activity; sid:3000002; rev:1;)
